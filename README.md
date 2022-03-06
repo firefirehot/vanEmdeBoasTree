@@ -23,6 +23,21 @@ vebTree(int passedU): Sets u when constructor is called.
 
 vebTree(int passedU, int passedMax): Sets u when constructor is called and it inserts the first value into the tree.
 
+# Usual Van Emde Boas Tree Functions:
+
+insert(int x): insert a new number x into the tree. Assumes that the value does not already exist in the tree.
+
+deleteValueInTree(int x): delete the value x inside of the tree. Assumes that the value is in the tree.
+
+findPrevious(int x): finds the first value before x in the tree.
+
+findSuccessor(int x): finds the first value after x in the tree.
+
+returnMinimum(): returns the minimum value of the tree
+
+returnMaximum(): returns the maximum value of the tree.
+
+valueInTree(int x): Returns true if x is a value inside of the tree. Returns false otherwise.
 
 # Unique Functions:
 runVEBTreeFullTest(int maxNumber): Runs a test of insert, delete, min, max, and value in tree functions by creating three files of random numbers that range from 0 to maxNumber.
