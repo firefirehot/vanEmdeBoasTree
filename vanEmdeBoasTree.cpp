@@ -4,6 +4,18 @@
 // Easy to parse source(with errors) that Geeks for Geeks linked to http://www-di.inf.puc-rio.br/~laber/vanEmdeBoas.pdf
 // Textbook https://ebookcentral.proquest.com/lib/ucr/reader.action?docID=3339142
 
+/*Change History:
+-removed redundant if(n == 2 ||...) from valueInTree , no change in runtime
+-reduced returnHighKey calculations by saving calculation in a variable(runtime 105->90)
+-further reduced calculations using the same trick(runtime 90->75)
+-removing for loop to insert u into new vebTrees by having outer variable(TESTUTOSS), no change in runtime
+-removed unneccessary recursive call (runtime 75seconds->283milliseconds)
+-figured out the the wrong equation was being used to calculate the universe of each cluster(fixes must now be made)
+-returnLowKey uses returnLowerSquareRoot.
+-learned that major source had missleading information. changed returnLowerSquareRoot in order to compensate.
+-squashed bug in findSuccessor if(u ==2 || cluster ==nullptr). cluster == nullptr was preventing single value clusters from returning valid numbers.
+*/
+
 #include "pch.h"
 #include <iostream>
 #include <math.h>
@@ -13,16 +25,13 @@
 #include <string>
 
 
-int returnLowerSquareRoot(int u) { 
+int returnLowerSquareRoot(int u) {
 	int lower = log2(u * 2) / 2;
 	return pow(2, lower);
 }
 int returnHighKey(int x, int u) { return x / returnLowerSquareRoot(u); }
 int returnLowKey(int x, int u) { return x % returnLowerSquareRoot(u); }
 int returnIndex(int x, int u, int y) { return x * returnLowerSquareRoot(u) + y; }
-
-
-
 
 void asserting(int assertion, int expected, int &testNumber) {
 	if (assertion == expected)
@@ -49,23 +58,6 @@ bool assertTruthNoCout(bool assertion, bool expectation, int &testNumber) {
 	else
 		return false;
 }
-
-
-
-/*Change History:
--removed redundant if(n == 2 ||...) from valueInTree , no change in runtime
--reduced returnHighKey calculations by saving calculation in a variable(runtime 105->90)
--further reduced calculations using the same trick(runtime 90->75)
--removing for loop to insert u into new vebTrees by having outer variable(TESTUTOSS), no change in runtime
--removed unneccessary recursive call (runtime 75seconds->283milliseconds)
--figured out the the wrong equation was being used to calculate the universe of each cluster(fixes must now be made)
--returnLowKey uses returnLowerSquareRoot.
--learned that major source had missleading information. changed returnLowerSquareRoot in order to compensate.
--squashed bug in findSuccessor if(u ==2 || cluster ==nullptr). cluster == nullptr was preventing single value clusters from returning valid numbers.
-*/
-
-
-
 
 class vebTree {
 public:
@@ -130,35 +122,25 @@ public:
 		vebTreeTestFile3.close();
 	}
 
-
-
 	void runTestFile(int maxNumber, std::string fileName, std::string printName) {
 		vebTree testTree;
 		int treeSize = maxNumber;
 		std::string fileInput;
 		testTree.u = treeSize;
 		std::ifstream fileinsert(fileName);
-
 		int testNumber = 0;
 
 		auto start = std::chrono::high_resolution_clock::now();
-
 		while (std::getline(fileinsert, fileInput)) {
-			testTree.insert(stoi(fileInput));
+			testTree.safeInsert(stoi(fileInput));
 		}
-
 		auto stop = std::chrono::high_resolution_clock::now();
-
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-
 		std::cout << printName << " insert time(milliseconds): " << duration.count() << "\n";
-
 		fileinsert.close();
 
 		std::ifstream filecheck(fileName);
-
 		start = std::chrono::high_resolution_clock::now();
-
 		while (std::getline(filecheck, fileInput)) {
 			if (assertTruthNoCout(testTree.valueInTree(stoi(fileInput)), true, testNumber) == false) {
 				std::cout << "\n FAILED " << printName << " \n" << testNumber;
@@ -166,13 +148,31 @@ public:
 				break;
 			}
 		}
-
 		stop = std::chrono::high_resolution_clock::now();
-
 		duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-
 		std::cout << printName << " check time(milliseconds): " << duration.count() << "\n";
+		filecheck.close();
 
+		
+		std::ifstream fileDelete(fileName);
+		start = std::chrono::high_resolution_clock::now();
+		while (std::getline(fileDelete, fileInput)) {
+			testTree.safeDelete(stoi(fileInput));
+		}
+		stop = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+		fileDelete.close();
+		if (testTree.min == -1 && testTree.max == -1)
+			std::cout << "Successful Delete, ";
+		else
+			std::cout << "Failed Delete, ";
+		std::cout << printName << " Delete time(milliseconds): " << duration.count() << "\n";
+	}
+
+	bool safeInsert(int numToInsert) {
+		if(valueInTree(numToInsert) == false)
+			return insert(numToInsert);
+		return false;
 	}
 
 	bool insert(int numToInsert) {
@@ -240,13 +240,12 @@ public:
 
 	int findSuccessor(int numToFindSuccessorOf) {
 
-		std::cout << min << " " << max << "\n";
 		if (u == 2)
 			if (numToFindSuccessorOf == 0 && max == 1)
 				return 1;
 			else
 				return -1;
-		else if ( min != -1 && numToFindSuccessorOf < min)
+		else if (min != -1 && numToFindSuccessorOf < min)
 			return min;
 		else {
 			int highKey = returnHighKey(numToFindSuccessorOf, u);
@@ -267,51 +266,89 @@ public:
 		}
 	}
 
+	int findPrevious(int numToFindPreviousOf) {
+
+		if (u == 2)
+			if (numToFindPreviousOf == 1 && min == 0)
+				return 0;
+			else
+				return -1;
+		else if (max != -1 && numToFindPreviousOf > max)
+			return max;
+		else {
+			int highKey = returnHighKey(numToFindPreviousOf, u);
+			int lowKey = returnLowKey(numToFindPreviousOf, u);
+			int minOfCluster = cluster[highKey].min;
+			if (minOfCluster != -1 && lowKey > minOfCluster) {
+				return returnIndex(highKey, u, cluster[highKey].findPrevious(lowKey));
+			}
+			else {
+				int previousCluster = summary->findPrevious(highKey);
+				if (previousCluster == -1) {
+					if (min != -1 && numToFindPreviousOf > min)
+						return min;
+					else 
+						return -1;
+				}
+				else {
+
+					return returnIndex(previousCluster, u, cluster[previousCluster].max);
+				}
+			}
+		}
+	}
+
+	void safeDelete(int numToFind) {
+		if (valueInTree(numToFind) == true)
+			deleteValueInTree(numToFind);
+	}
+
 	bool deleteValueInTree(int numToFind) {
-		if (min == max) {
+		bool foundKey = false;
+		if (min == max) {//one key in tree
 			min = -1;
 			max = -1;
+			return true;
 		}
-		else if (u == 2) {
+		else if (u == 2) {//exactly two keys in the tree because size is two
 			if (numToFind == 0)
 				min = 1;
 			else
 				min = 0;
 			max = min;
+			return true;
+
 		}
-		else if(numToFind == min){
-			int firstCluster = summary->min;
-			numToFind = returnIndex(firstCluster, u, cluster[firstCluster].min);
-			min = numToFind;
-		}
-		int highKey = returnHighKey(numToFind, u);
-		int lowKey = returnLowKey(numToFind, u);
-		cluster[highKey].deleteValueInTree(lowKey);
-		if (cluster[highKey].min == -1) {
-			summary->deleteValueInTree(highKey);
-			if (numToFind == max){
-				int summaryMax = summary->max;
-				if (summaryMax == -1)
-					max = min;
-				else 
-					max = returnIndex(summaryMax, u, cluster[summaryMax].max);
-			
+		else {
+			if (numToFind == min) {
+				numToFind = returnIndex(summary->min, u, cluster[summary->min].min);
+				min = numToFind;
 			}
+			int highKey = returnHighKey(numToFind, u);
+			int lowKey = returnLowKey(numToFind, u);
+			foundKey = cluster[highKey].deleteValueInTree(lowKey);
+			if (cluster[highKey].min == -1) {
+				summary->deleteValueInTree(highKey);
+				if (numToFind == max) {
+					int summaryMax = summary->max;
+					if (summaryMax == -1)
+						max = min;
+					else
+						max = returnIndex(summaryMax, u, cluster[summaryMax].max);
+				}
+			}
+			else if (numToFind == max) {
+				int highKey = returnHighKey(numToFind, u);
+				max = returnIndex(highKey, u, cluster[highKey].max);
+			}
+			return foundKey;
 		}
-		else if(numToFind == max){
-			int highKey = returnHighKey(numToFind,u);
-			max = returnIndex(highKey, u , cluster[highKey].max);
-		}
-
 	}
-	
-
 };
 
 
 void returnLowerSquareRootTest() {
 	int testNumber = 0;
-	
 	asserting(returnLowerSquareRoot(4), 2, testNumber);
 	asserting(returnLowerSquareRoot(8), 4, testNumber);
 	asserting(returnLowerSquareRoot(16), 4, testNumber);
@@ -323,54 +360,81 @@ void returnLowerSquareRootTest() {
 
 void runVEBSmallTreeTests() {
 	vebTree testTree;
-	int treeSize = 64;
+	int treeSize = 16;
 	testTree.u = treeSize;
-
 	int testNumber = 0;
 
-	testTree.insert(1);
+	std::cout << "Min/max Tests: \n";
+	testTree.safeInsert(1);
 	asserting(testTree.min, 1, testNumber);//test that 1 is min
 	asserting(testTree.max, 1, testNumber);//test that 1 is max
-	testTree.insert(0);
-	testTree.insert(3);
-	testTree.insert(15);
+	testTree.safeInsert(0);
+	testTree.safeInsert(3);
+	testTree.safeInsert(15);
 
+	std::cout << "FindSuccessor Tests: \n";
 	asserting(testTree.findSuccessor(1), 3, testNumber);
 	asserting(testTree.findSuccessor(0), 1, testNumber);
 	asserting(testTree.findSuccessor(2), 3, testNumber);
 	asserting(testTree.findSuccessor(3), 15, testNumber);
 
+	std::cout << "FindPredecessor Tests: \n";
+	asserting(testTree.findPrevious(1), 0, testNumber);
+	asserting(testTree.findPrevious(15), 3, testNumber);
+	asserting(testTree.findPrevious(3), 1, testNumber);
+	asserting(testTree.findPrevious(6), 3, testNumber);
 
+	std::cout << "Value in tree Tests: \n";
 	assertTruth(testTree.valueInTree(0), true, testNumber);
 	assertTruth(testTree.valueInTree(1), true, testNumber);
-
 	assertTruth(testTree.valueInTree(2), false, testNumber);
 	assertTruth(testTree.valueInTree(3), true, testNumber);
 
-	/*
+	std::cout << "Delete Tests: \n";
+	testTree.safeDelete(0);
+	assertTruth(testTree.valueInTree(0), false, testNumber);
+	testTree.safeInsert(0);
+	assertTruth(testTree.valueInTree(0), true, testNumber);
+	testTree.safeDelete(0);
+	assertTruth(testTree.valueInTree(0), false, testNumber);
+	testTree.safeDelete(1);
+
+	testTree.safeInsert(0);
+	assertTruth(testTree.valueInTree(0), true, testNumber);
+	testTree.safeInsert(0);
+	assertTruth(testTree.valueInTree(0), true, testNumber);
+
+	testTree.safeDelete(1);
+	assertTruth(testTree.valueInTree(1), false, testNumber);
+	testTree.safeInsert(1);
+	assertTruth(testTree.valueInTree(1), true, testNumber);
+	
+	std::cout << "Full Delete Tests: \n";
+
 	for (int i = 0; i < treeSize; i++) {
-		testTree.insert(i);
+		testTree.safeInsert(i);
+	}
+
+	for (int i = 0; i < treeSize; i++) {
+		testTree.safeDelete(i);
 	}
 	for (int i = 0; i < treeSize; i++) {
-		assertTruth(testTree.valueInTree(i), true, testNumber);
+		assertTruth(testTree.valueInTree(i), false, testNumber);
 	}
-	*/
+	
+	
 }
 
 void runVEBBigTreeTests() {
 	vebTree testTree;
 	int treeSize = 131072;//Current maximum due to memory restrictions. takes about 4.1 seconds to insert and 0.5 seconds to check. 4.631 seconds total.
-	//int treeSize = 8;
 	testTree.u = treeSize;
-
 	int testNumber = 0;
 
 	auto start = std::chrono::high_resolution_clock::now();
-
 	for (int i = 0; i < treeSize; i++) {
 		testTree.insert(i);
 	}
-
 	for (int i = 0; i < treeSize; i++) {
 		if (assertTruthNoCout(testTree.valueInTree(i), true, testNumber) == false) {
 			std::cout << "\n FAILED \n" << testNumber;
@@ -379,19 +443,14 @@ void runVEBBigTreeTests() {
 		}
 	}
 	auto stop = std::chrono::high_resolution_clock::now();
-
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-
 	std::cout << "\n" << duration.count();
 }
 
 void testVEBHelperFunctions() {
 	int testNumber = 0;
-
 	asserting(returnLowerSquareRoot(4), 2, testNumber);
-
 	asserting(returnLowerSquareRoot(8), 2, testNumber);
-
 }
 
 int main()
