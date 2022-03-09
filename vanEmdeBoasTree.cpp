@@ -14,6 +14,7 @@
 -returnLowKey uses returnLowerSquareRoot.
 -learned that major source had missleading information. changed returnLowerSquareRoot in order to compensate.
 -squashed bug in findSuccessor if(u ==2 || cluster ==nullptr). cluster == nullptr was preventing single value clusters from returning valid numbers.
+-cut off around 200 milliseconds by changing the calcualtions of returnHighKey and returnLowKey to use bitwise operators over division and modulus.
 */
 
 #include "pch.h"
@@ -27,10 +28,15 @@
 
 int returnLowerSquareRoot(int u) {
 	int lower = log2(u * 2) / 2;
-	return pow(2, lower);
+	return 1 << lower;
 }
-int returnHighKey(int x, int u) { return x / returnLowerSquareRoot(u); }
-int returnLowKey(int x, int u) { return x % returnLowerSquareRoot(u); }
+int returnLowerSquareRootBits(int u) {
+	int lower = log2(u * 2) / 2;
+	return lower;
+}
+
+int returnHighKey(int x, int u) { return x >> returnLowerSquareRootBits(u); }
+int returnLowKey(int x, int u) { return x & (returnLowerSquareRoot(u) - 1); }
 int returnIndex(int x, int u, int y) { return x * returnLowerSquareRoot(u) + y; }
 
 void asserting(int assertion, int expected, int &testNumber) {
@@ -193,11 +199,10 @@ public:
 			int lowKey = returnLowKey(numToInsert, u);
 
 			if (cluster == nullptr) {
-				int upperSquareRoot = returnLowerSquareRoot(u);
 				int lowerSquareRoot = returnLowerSquareRoot(u);
 
-				cluster = new vebTree[upperSquareRoot];
-				for (int i = 0; i < upperSquareRoot; i++) {
+				cluster = new vebTree[lowerSquareRoot];
+				for (int i = 0; i < lowerSquareRoot; i++) {
 					cluster[i].u = lowerSquareRoot;
 				}
 			}
