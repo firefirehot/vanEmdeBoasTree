@@ -1,5 +1,7 @@
 #Summarized Implementations:
+
 #Variables: 
+
   Variables are min, max, cluster, summary, and u. Min and max hold the minimum and maximum number currently in the tree. Cluster is a pointer to the array of subtrees. Summary is a pointer to a VEB tree that acts as a data structure to maintain whether a subtree is empty or not.
 	##Constructor: 
   Min and max are initially set to be equal to -1. Cluster and summary are initially set to be equal to nullptr. There are 3 different constructors that can be used to create a VEB Tree depending on what information is currently available.
