@@ -42,7 +42,7 @@
   
   ## Find Predecessor aka findPrevious(): 
   
-	If the current node is a leaf node return true or false depending on if the predecessor is in the current node. Otherwise, if the passed value is greater than the current maximum of the tree, return the current max. Otherwise, check if the minimum of the passed value’s corresponding cluster is less than the passed value. If it is then recursively call Find Predecessor on the passed value’s corresponding cluster. If not call Find Predecessor on the summary to find the cluster that will have the predecessor and return the maximum value of that cluster.
+  If the current node is a leaf node return true or false depending on if the predecessor is in the current node. Otherwise, if the passed value is greater than the current maximum of the tree, return the current max. Otherwise, check if the minimum of the passed value’s corresponding cluster is less than the passed value. If it is then recursively call Find Predecessor on the passed value’s corresponding cluster. If not call Find Predecessor on the summary to find the cluster that will have the predecessor and return the maximum value of that cluster.
 	
   ## Delete Value aka deleteValueInTree():
   
@@ -58,12 +58,13 @@ For example, if I created $2^k$ integers from 0 to $2^k$ - 1, Find Successor and
 
 # Experiments and Analysis:
 
-The first experiment done was to compare the Van Emde Boas Tree to std::set which is implemented as a binary tree. The results were given 217 numbers ranging from 0 to 217-1 the Van Emde Boas Tree inserted, checked, and deleted about twice as fast as std::set. This relationship held for different random files and across different universes of numbers. 
+The first experiment done was to compare the Van Emde Boas Tree to std::set which is implemented as a binary tree. The results were given 217 numbers ranging from 0 to $2^17$-1 the Van Emde Boas Tree inserted, checked, and deleted about twice as fast as std::set. This relationship held for different random files and across different universes of numbers. 
 The comparison to std::set’s usefulness ends after this point due to the fact that std::set’s functions are log (n) which are fundamentally different to the Van Emde Boas Tree’s functions of log (log (u)).
 
   The second experiment was to create a chart mapping the average time it took to perform a check for value in the tree against the universe of numbers. I expected to see a logarithmic curve after creating a logarithmic scaling on the universe. What I got instead was a spike in cost around from $2^13$ to $2^17$, with only $2^18$ and $2^19$ following the curve I expected. Bellow I will try to explain why.
+  
 Due to the nature of the Van Emde Boas tree it is very difficult to get a substantial number of data points because the universes must be $2^k$ and my computer cannot handle more than $2^19$. Below the universe universes from $2^13$ to $2^19$, a total of 9 data points. At $2^13$ the cost per check is at its lowest, at $2^17$ the cost is at its highest, at $2^18$ it seems that the cost is leveling out. 
-I believe that the graph looks the way it does because of the relationship that 
-log (log (u)) has with its constant. At lower “u” the constant plays a greater role in determining the average time to perform a check for a value, peaking with $2^17$. After $2^17$, the constant plays a lesser role in revealing the log (log (u)) time. This is revealed due to the logarithmic separation of values of the graph.
+
+I believe that the data looks the way it does because of the relationship that log (log (u)) has with its constant. At lower “u” the constant plays a greater role in determining the average time to perform a check for a value, peaking with $2^17$. After $2^17$, the constant plays a lesser role in revealing the log (log (u)) time. This is revealed due to the logarithmic separation of values of the graph.
 
 
