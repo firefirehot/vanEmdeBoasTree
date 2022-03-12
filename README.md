@@ -43,7 +43,9 @@
   ## Find Predecessor aka findPrevious(): 
   
 	If the current node is a leaf node return true or false depending on if the predecessor is in the current node. Otherwise, if the passed value is greater than the current maximum of the tree, return the current max. Otherwise, check if the minimum of the passed value’s corresponding cluster is less than the passed value. If it is then recursively call Find Predecessor on the passed value’s corresponding cluster. If not call Find Predecessor on the summary to find the cluster that will have the predecessor and return the maximum value of that cluster.
-  ##Delete Value aka deleteValueInTree():
+	
+  ## Delete Value aka deleteValueInTree():
+  
   If min is equal to max set both to -1. Otherwise, if the current node is a leaf node delete the value by setting max equal to min or min equal to max accordingly. Otherwise, if the passed value is equal to min find a number to replace min in the minimum value of the passed value’s cluster. If the passed value’s corresponding cluster is empty delete the value in the summary by recursively calling Delete Value on the summary. Otherwise, if the number to delete is equal to the maximum of the current node find a new maximum in the passed value’s corresponding cluster.
 
 # Testing data:
@@ -54,7 +56,8 @@ I used these three files to insert into a VEB Tree, check that all the integers 
   To test Find Successor and Finding Predecessor I made two types of tests. First I made smaller tests that I could directly see the results. Second I used both Find Successor and Find Predecessor to count up the number of unique values inside of the trees created by random integers. I then compared Find Successor and Find Predecessor against each other and I compared them against what I expected. 
 For example, if I created $2^k$ integers from 0 to $2^k$ - 1, Find Successor and Find Predecessor would find about 0.63\times2k unique integers. If I created 1.4\times$2^k$ integers from 0 to 2k-1 , Find Successor and Find Predecessor would find about 0.75\times$2^k$ unique integers. These results are in accordance with the expectation.
 
-Experiments and Analysis:
+# Experiments and Analysis:
+
 The first experiment done was to compare the Van Emde Boas Tree to std::set which is implemented as a binary tree. The results were given 217 numbers ranging from 0 to 217-1 the Van Emde Boas Tree inserted, checked, and deleted about twice as fast as std::set. This relationship held for different random files and across different universes of numbers. 
 The comparison to std::set’s usefulness ends after this point due to the fact that std::set’s functions are log (n) which are fundamentally different to the Van Emde Boas Tree’s functions of log (log (u)).
 
